@@ -10,6 +10,9 @@ type Config struct {
 	DBHost string `envconfig:"DB_HOST" required:"true"`
 	DBPort int    `envconfig:"DB_PORT" required:"true"`
 	DBName string `envconfig:"DB_NAME" required:"true"`
+
+	GRPCAddr string `envconfig:"GRPC_ADDR" required:"true"`
+	GRPCPort int    `envconfig:"GRPC_PORT" required:"true"`
 }
 
 func ConfigFromEnv() (*Config, error) {

@@ -17,3 +17,9 @@ docker-up-and-build: docker-build-client docker-build-server
 
 docker-up:
 	docker compose up -d
+
+lint:
+	golangci-lint run --config ./golangci.yml ./...
+
+format:
+	golines --max-len=100 -w ./

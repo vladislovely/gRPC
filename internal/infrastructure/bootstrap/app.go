@@ -1,30 +1,22 @@
 package bootstrap
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
-	"time"
+	"strconv"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
-	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 
 	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	repo "vladislove-gRPC/internal/infrastructure/database/repository"
 	"vladislove-gRPC/internal/services"
 )
-
-type User struct {
-	ID    uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
-	Name  string
-	Email string
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
 
 type App struct {
 	logger *log.Logger
@@ -74,18 +66,22 @@ func (a *App) initLogger() {
 
 func (a *App) initDB() error {
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", a.cfg.DBHost, a.cfg.DBUser, a.cfg.DBPass,
-		a.cfg.DBName, a.cfg.DBPort,
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable",
+		a.cfg.DBHost,
+		a.cfg.DBUser,
+		a.cfg.DBPass,
+		a.cfg.DBName,
+		a.cfg.DBPort,
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, dbErr := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
-	if err != nil {
-		return err
+	if dbErr != nil {
+		return dbErr
 	}
 
-	if err := db.AutoMigrate(&User{}); err != nil {
-		return err
+	if migrationErr := db.AutoMigrate(&repo.User{}); migrationErr != nil {
+		return migrationErr
 	}
 
 	a.db = db
@@ -94,18 +90,27 @@ func (a *App) initDB() error {
 }
 
 func (a *App) initGRPC() error {
-	listener, listenErr := net.Listen("tcp", ":50051")
+	lc := net.ListenConfig{}
+	listener, listenErr := lc.Listen(
+		context.Background(),
+		"tcp",
+		fmt.Sprintf(":%d", a.cfg.GRPCPort),
+	)
 	if listenErr != nil {
 		a.logger.Fatalf("Ошибка запуска сервера: %v", listenErr)
+
+		return listenErr
 	}
 
 	grpcServer := grpc.NewServer()
 
-	services.RegisterServices(grpcServer, a.logger)
+	services.RegisterServices(grpcServer, a.logger, a.db)
 
-	a.logger.Info("gRPC сервер запущен на порту 50051")
+	a.logger.Info("gRPC сервер запущен на порту - " + strconv.Itoa(a.cfg.GRPCPort))
 	if err := grpcServer.Serve(listener); err != nil {
 		a.logger.Fatalf("Ошибка запуска сервера: %v", err)
+
+		return err
 	}
 
 	return nil
