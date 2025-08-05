@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 
 	repo "vladislove-gRPC/internal/infrastructure/database/repository"
-	"vladislove-gRPC/internal/services"
+	grpcservices "vladislove-gRPC/internal/services"
 )
 
 type App struct {
@@ -47,7 +47,7 @@ func (a *App) Run() error {
 }
 
 func (a *App) initLogger() {
-	var logger = &log.Logger{
+	logger := &log.Logger{
 		Out: os.Stdout,
 		Formatter: &nested.Formatter{
 			HideKeys:        true,
@@ -104,7 +104,7 @@ func (a *App) initGRPC() error {
 
 	grpcServer := grpc.NewServer()
 
-	services.RegisterServices(grpcServer, a.logger, a.db)
+	grpcservices.RegisterServices(grpcServer, a.logger, a.db)
 
 	a.logger.Info("gRPC сервер запущен на порту - " + strconv.Itoa(a.cfg.GRPCPort))
 	if err := grpcServer.Serve(listener); err != nil {

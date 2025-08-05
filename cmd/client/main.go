@@ -10,11 +10,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	pb "vladislove-gRPC/internal/gen/user"
-	"vladislove-gRPC/internal/infrastructure/bootstrap"
+	boot "vladislove-gRPC/internal/infrastructure/bootstrap"
 )
 
 func main() {
-	cfg, bootstrapErr := bootstrap.ConfigFromEnv()
+	cfg, bootstrapErr := boot.ConfigFromEnv()
 	if bootstrapErr != nil {
 		log.Fatalf("произошла ошибка при прочтении конфигурации .env: %v", bootstrapErr)
 	}
@@ -39,6 +39,7 @@ func main() {
 		ctx,
 		&pb.UserRequest{Id: "6efa6f6e-60ac-466e-8561-1a5f56e1f2cb"},
 	)
+
 	if getUserErr != nil {
 		cancel()
 

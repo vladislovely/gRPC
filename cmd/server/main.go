@@ -3,11 +3,11 @@ package main
 import (
 	"log"
 
-	"vladislove-gRPC/internal/infrastructure/bootstrap"
+	boot "vladislove-gRPC/internal/infrastructure/bootstrap"
 )
 
 func main() {
-	cfg, bootstrapErr := bootstrap.ConfigFromEnv()
+	cfg, bootstrapErr := boot.ConfigFromEnv()
 	if bootstrapErr != nil {
 		log.Fatalf("произошла ошибка при прочтении конфигурации .env: %v", bootstrapErr)
 	}
@@ -18,8 +18,8 @@ func main() {
 	}
 }
 
-func initApp(cfg *bootstrap.Config) error {
-	newApp := bootstrap.NewApp(cfg)
+func initApp(cfg *boot.Config) error {
+	newApp := boot.NewApp(cfg)
 
 	err := newApp.Run()
 	if err != nil {
